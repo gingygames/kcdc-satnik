@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Šatník</title>
+<link rel="stylesheet" href="kit/theme.css">
+<link rel="stylesheet" href="kit/components.css">
+<link rel="stylesheet" href="style.css">
+<script src="kit/kit.js"></script>
+<script>Kit.init();</script>
+</head>
+<body class="k">
+<div class="app">
+  <header class="top">
+    <strong class="title">Šatník</strong>
+    <nav class="k-tabs" role="tablist" aria-label="Pohlaví">
+      <button class="k-tab" role="tab" aria-selected="true" data-pohlavi="m">Pánské</button>
+      <button class="k-tab" role="tab" aria-selected="false" data-pohlavi="f">Dámské</button>
+    </nav>
+    <span id="stav" class="k-muted"></span>
+    <button id="zavrit" class="k-btn k-btn--ghost k-btn--sm" title="Zavřít (Esc)">✕</button>
+  </header>
+
+  <div class="filters">
+    <input class="k-input" id="q" type="search" placeholder="Hledat název nebo id (Ctrl+F)" autocomplete="off">
+    <select class="k-input" id="druh" title="Druh"><option value="">Oblečení i zbroj</option><option value="obleceni">jen oblečení</option><option value="zbroj">jen zbroj</option></select>
+    <select class="k-input" id="pod" title="Druh kusu"><option value="">Všechny kusy</option></select>
+    <select class="k-input" id="razeni" title="Řazení"><option value="nazev">podle těla a názvu</option><option value="cena">podle ceny</option></select>
+    <label class="k-switch" title="Každou barvu a provedení zvlášť"><input id="varianty" type="checkbox"><span class="k-track"></span> každá varianta zvlášť</label>
+  </div>
+  <div id="sloty" class="chips" role="group" aria-label="Část těla"></div>
+
+  <div class="body">
+    <div id="mrizka" class="grid" tabindex="0"><div id="spacer"></div><div id="cells"></div></div>
+    <aside id="detail" class="detail"><div class="k-empty"><strong>Klikni na kus oblečení.</strong> Figurína vpravo si ho hned oblékne a tady uvidíš přesné názvy a všechny varianty.</div></aside>
+  </div>
+
+  <footer class="bottom">
+    <div class="na-sobe">
+      <span class="k-muted">Na figuríně:</span>
+      <div id="na" class="na"></div>
+    </div>
+    <div class="ovl">
+      <div class="k-tabs zoom" role="tablist" aria-label="Záběr">
+        <button class="k-tab" data-zoom="postava" aria-selected="true">Postava</button>
+        <button class="k-tab" data-zoom="horni" aria-selected="false">Trup</button>
+        <button class="k-tab" data-zoom="hlava" aria-selected="false">Hlava</button>
+        <button class="k-tab" data-zoom="nohy" aria-selected="false">Nohy</button>
+      </div>
+      <button class="k-btn k-btn--ghost k-btn--sm" id="vlevo" title="Otočit (Q)">⟲</button>
+      <button class="k-btn k-btn--ghost k-btn--sm" id="vpravo" title="Otočit (E)">⟳</button>
+      <span class="sep"></span>
+      <button class="k-btn k-btn--ghost k-btn--sm" id="moje" title="Figurína si oblékne, co máš na sobě">Moje oblečení</button>
+      <button class="k-btn k-btn--ghost k-btn--sm" id="svlect">Svléct</button>
+      <button class="k-btn k-btn--ghost k-btn--sm" id="kopirovat" title="Zkopíruje názvy a id do schránky">Kopírovat seznam</button>
+      <button class="k-btn k-btn--sm" id="ukazat" title="Pošle seznam do chatu hráčům kolem tebe (krejčímu)">Ukázat krejčímu</button>
+    </div>
+    <div id="klavesy"></div>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

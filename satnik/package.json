@@ -1,0 +1,18 @@
+{
+  "name": "satnik-kcdc",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Šatník pro Kingdoms Connected: všechno oblečení ze hry s ikonami a přesnými názvy, vyzkoušení na figuríně (pánské i dámské), /satnik pro všechny",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "vitest run",
+    "ui": "node tools/ui-dev.mjs"
+  },
+  "devDependencies": {
+    "@kingdomsconnected/types": "1.7.1",
+    "esbuild": "^0.28.2",
+    "typescript": "6.0.2",
+    "vitest": "^5.0.5"
+  }
+}

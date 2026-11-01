@@ -1,0 +1,48 @@
+/* Šatník: jen rozložení. Vzhled je z ui-kit (body.k, třídy k-*, tokeny --k-*). Panel je vlevo, vpravo je vidět figurína ve hře. */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+.app { display: flex; flex-direction: column; height: 100%; border-right: 1px solid var(--k-line); }
+.top { display: flex; align-items: center; gap: var(--k-s3); padding: var(--k-s2) var(--k-s3); background: var(--k-surface); border-bottom: 1px solid var(--k-line); }
+.top #zavrit { margin-left: auto; }
+.title { color: var(--k-accent); font-family: var(--k-font-serif); font-size: 1.2rem; }
+.filters { display: flex; flex-wrap: wrap; gap: var(--k-s2); padding: var(--k-s2) var(--k-s3); align-items: center; }
+.filters .k-input { width: auto; }
+.filters #q { flex: 1 1 14rem; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--k-s1); padding: 0 var(--k-s3) var(--k-s2); }
+.body { flex: 1; display: flex; min-height: 0; }
+.grid { flex: 1; position: relative; overflow-y: auto; outline: none; }
+#cells { position: absolute; left: 0; right: 0; top: 0; }
+/* buňky mají pevný rozměr v px kvůli virtuálnímu scrollu (CW/CH v app.js) */
+.cell { position: absolute; overflow: hidden; width: 104px; height: 124px; padding: 6px 4px; text-align: center; cursor: pointer; border: 1px solid transparent; border-radius: var(--k-r-sm); }
+.cell:hover { background: var(--k-surface-2); }
+.cell.sel { border-color: var(--k-accent); background: var(--k-surface-2); }
+.cell.na { box-shadow: inset 0 -3px 0 var(--k-accent); }
+.ico { position: relative; width: 64px; height: 64px; margin: 0 auto 4px; background: var(--k-surface) center/contain no-repeat; border-radius: var(--k-r-sm); }
+.ico.chybi::after { content: "?"; display: block; line-height: 64px; color: var(--k-faint); font-size: 1.5rem; }
+.ico .n { position: absolute; right: -6px; bottom: -4px; font-size: 0.7rem; padding: 0 4px; border-radius: 8px; background: var(--k-bg); border: 1px solid var(--k-line); color: var(--k-muted); }
+.cell .nm { font-size: 0.78rem; line-height: 1.2; height: 2.4em; overflow: hidden; }
+.cell .pd { font-size: 0.68rem; color: var(--k-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.detail { width: 21rem; border-left: 1px solid var(--k-line); padding: var(--k-s3); overflow-y: auto; background: var(--k-surface); }
+.detail .hlava { display: flex; gap: var(--k-s3); align-items: flex-start; }
+.detail .big { flex: none; width: 96px; height: 96px; background: var(--k-bg) center/contain no-repeat; border: 1px solid var(--k-line-soft); border-radius: var(--k-r-sm); }
+.detail h3 { margin: 0 0 2px; color: var(--k-accent); font-family: var(--k-font-serif); }
+.detail .popis { font-size: 0.88rem; color: var(--k-muted); margin: var(--k-s2) 0; font-style: italic; }
+.nazvy { display: grid; grid-template-columns: auto 1fr auto; gap: 4px var(--k-s2); align-items: center; margin: var(--k-s2) 0; font-size: 0.9rem; }
+.nazvy dt { color: var(--k-muted); }
+.nazvy dd { margin: 0; word-break: break-all; }
+.nazvy dd.id { font-family: var(--k-font-mono, monospace); }
+.var { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--k-s2) 0; }
+.var button { width: 58px; padding: 2px; border: 1px solid var(--k-line-soft); border-radius: var(--k-r-sm); background: var(--k-bg); color: inherit; cursor: pointer; font-size: 0.66rem; }
+.var button[aria-pressed="true"] { border-color: var(--k-accent); }
+.var .ico { width: 48px; height: 48px; margin: 0 auto 2px; }
+.cisla { display: grid; grid-template-columns: auto 1fr; gap: 2px var(--k-s3); font-size: 0.88rem; margin: var(--k-s2) 0; }
+.cisla dt { color: var(--k-muted); }
+.cisla dd { margin: 0; }
+.bottom { border-top: 1px solid var(--k-line); background: var(--k-surface); padding: var(--k-s2) var(--k-s3); display: grid; gap: var(--k-s2); }
+.na-sobe { display: flex; gap: var(--k-s2); align-items: center; min-height: 52px; }
+.na { display: flex; gap: 6px; flex-wrap: wrap; }
+.na button { position: relative; width: 46px; height: 46px; padding: 0; border: 1px solid var(--k-line); border-radius: var(--k-r-sm); background: var(--k-bg) center/40px no-repeat; cursor: pointer; }
+.na button::after { content: "✕"; position: absolute; top: -6px; right: -6px; font-size: 0.65rem; line-height: 14px; width: 14px; border-radius: 7px; background: var(--k-bg); color: var(--k-muted); opacity: 0; }
+.na button:hover::after, .na button:focus::after { opacity: 1; }
+.ovl { display: flex; flex-wrap: wrap; gap: var(--k-s2); align-items: center; }
+.ovl .sep { flex: 1; }
