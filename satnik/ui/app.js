@@ -8,7 +8,8 @@
   var BLOK = 120, CW = 108, CH = 128, OTOCENI = 30;
   var rid = 0, cekaji = {};
   var st = { info: null, dotaz: { razeni: "nazev", pohlavi: "m" }, celkem: 0, bloky: {}, verze: 0, sel: null, detail: null, varSel: null, fig: { pohlavi: "m", zoom: "postava", na: [] } };
-  var ikony = {}, chciIkony = {};
+  var IKON_MAX = 800;      // ikon v paměti stránky (blob: URL); nejdéle nepoužité se uvolní
+  var ikony = new Map(), chciIkony = {};   // klíč -> blob URL | "" (chybí) | null (čeká)
   var $ = function (id) { return document.getElementById(id); };
 
   function send(name, payload) {
@@ -74,10 +75,39 @@
     toast(ok ? "Zkopírováno: " + co : "Schránka nejde, opiš: " + text, !ok);
   }
 
-  // --- ikony: sběr viditelných, dávka za 40 ms --------------------------------
+  // --- ikony: sběr viditelných, dávka za 40 ms; každá se jednou převede na blob: URL ------
+  // (data: URL by se v každém snímku posunu parsovalo jako ~9 kB CSS na buňku)
+  function blobUrl(b64) {
+    try {
+      var bin = atob(b64), u8 = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      return URL.createObjectURL(new Blob([u8], { type: "image/png" }));
+    } catch (e) { return "data:image/png;base64," + b64; }
+  }
+  function ikonaGet(k) {
+    if (!ikony.has(k)) return undefined;
+    var v = ikony.get(k);
+    ikony.delete(k);
+    ikony.set(k, v);
+    return v;
+  }
+  function ikonaPut(k, v) {
+    var old = ikony.get(k);
+    if (old && old !== v) URL.revokeObjectURL(old);
+    ikony.delete(k);
+    ikony.set(k, v);
+    if (ikony.size <= IKON_MAX) return;
+    var it = ikony.keys(), n;
+    while (ikony.size > IKON_MAX && !(n = it.next()).done) {
+      var ov = ikony.get(n.value);
+      if (ov === null) continue;          // čeká na odpověď
+      ikony.delete(n.value);
+      if (ov && ov.indexOf("blob:") === 0) URL.revokeObjectURL(ov);
+    }
+  }
   var ikonyT = 0;
   function chciIkonu(k) {
-    if (!k || ikony[k] !== undefined || chciIkony[k]) return;
+    if (!k || ikony.has(k) || chciIkony[k]) return;
     chciIkony[k] = true;
     clearTimeout(ikonyT);
     ikonyT = setTimeout(posliIkony, 40);
@@ -85,19 +115,23 @@
   function posliIkony() {
     var klice = Object.keys(chciIkony).slice(0, 120);
     if (!klice.length) return;
-    klice.forEach(function (k) { delete chciIkony[k]; ikony[k] = null; });
+    klice.forEach(function (k) { delete chciIkony[k]; ikonaPut(k, null); });
     zadost("ikony", { klice: klice }, function (o) {
-      (o.ikony || []).forEach(function (i) { ikony[i.k] = i.d ? "data:image/png;base64," + i.d : ""; });
+      (o.ikony || []).forEach(function (i) { ikonaPut(i.k, i.d ? blobUrl(i.d) : ""); });
       if (!o.dalsi) { kresli(); prekresliIkony(); }
       if (Object.keys(chciIkony).length) posliIkony();
     });
   }
+  /** nastaví ikonu prvku; když se nic nezměnilo, na styl nesahá (recyklované buňky mřížky) */
   function nastavIkonu(el, k) {
-    var d = ikony[k];
+    var d = k ? ikonaGet(k) : "";
+    if (el._ik === k && el._iu === d) return;
+    el._ik = k;
+    el._iu = d;
     if (!k || d === "") { el.style.backgroundImage = ""; el.classList.add("chybi"); return; }
     el.classList.remove("chybi");
     if (d) el.style.backgroundImage = "url(" + d + ")";
-    else chciIkonu(k);
+    else { el.style.backgroundImage = ""; chciIkonu(k); }
   }
   function prekresliIkony() {
     var els = document.querySelectorAll("[data-ikona]");
@@ -131,14 +165,29 @@
     });
   }
   function sloupce() { return Math.max(1, Math.floor(($("mrizka").clientWidth - 8) / CW)); }
+  // buňky se recyklují: posun jen přesune, co odjelo z obrazovky, a přepíše jejich obsah (žádné mazání a stavění DOM)
+  var bunky = {};   // index výsledku -> prvek
+  var volne = [];   // skryté prvky k dalšímu použití
+  function bunka() {
+    var el = volne.pop();
+    if (el) { el.style.display = ""; return el; }
+    var n = h("span", { class: "n" }), ico = h("div", { class: "ico" }, n), nm = h("div", { class: "nm" }), pd = h("div", { class: "pd" });
+    el = h("div", { class: "cell" }, ico, nm, pd);
+    el._ico = ico;
+    el._n = n;
+    el._nm = nm;
+    el._pd = pd;
+    $("cells").appendChild(el);
+    return el;
+  }
   function kresli() {
     var g = $("mrizka"), cols = sloupce(), rows = Math.ceil(st.celkem / cols);
-    $("spacer").style.height = rows * CH + "px";
+    var vyska = rows * CH + "px";
+    if ($("spacer").style.height !== vyska) $("spacer").style.height = vyska;
     var r0 = Math.max(0, Math.floor(g.scrollTop / CH) - 2), r1 = Math.min(rows, Math.ceil((g.scrollTop + g.clientHeight) / CH) + 2);
-    var cells = $("cells");
-    cells.textContent = "";
-    var frag = document.createDocumentFragment();
     var S = (st.info && st.info.sloty) || {};
+    // 1) co má být vidět; 2) buňky mimo to se uvolní; 3) zbytek dostane buňku (stará zůstane na místě, uvolněná se přesune)
+    var chci = [], idx = {};
     for (var r = r0; r < r1; r++) {
       for (var c = 0; c < cols; c++) {
         var i = r * cols + c;
@@ -148,18 +197,35 @@
         if (blok === "nacita") continue;
         var x = blok[i % BLOK];
         if (!x) continue;
-        var ico = h("div", { class: "ico" }, x[6] > 1 ? h("span", { class: "n", text: "×" + x[6] }) : null);
-        nastavIkonu(ico, x[4]);
-        var cell = h("div", { class: "cell" + (st.sel && st.sel[0] === x[0] ? " sel" : "") + (naSobe(x[8]) ? " na" : ""), title: x[1] + " (" + x[8] + ")" + (x[6] > 1 ? " · " + x[6] + " variant" : "") },
-          ico, h("div", { class: "nm", text: x[1] }), h("div", { class: "pd", text: x[2] + " · " + (S[x[3]] || x[3]) }));
-        cell.style.left = 4 + c * CW + "px";
-        cell.style.top = r * CH + "px";
-        cell.addEventListener("click", vyber.bind(null, x));
-        frag.appendChild(cell);
+        chci.push(i, x, r, c);
+        idx[i] = true;
       }
     }
-    cells.appendChild(frag);
+    for (var k in bunky) if (!idx[k]) { var z = bunky[k]; z.style.display = "none"; z._x = null; volne.push(z); delete bunky[k]; }
+    for (var j = 0; j < chci.length; j += 4) {
+      i = chci[j]; x = chci[j + 1]; r = chci[j + 2]; c = chci[j + 3];
+      var el = bunky[i] || (bunky[i] = bunka());
+      if (el._x !== x) {
+        el._x = x;
+        el._nm.textContent = x[1];
+        el._pd.textContent = x[2] + " · " + (S[x[3]] || x[3]);
+        el._n.textContent = x[6] > 1 ? "×" + x[6] : "";
+        el._n.style.display = x[6] > 1 ? "" : "none";
+        el.title = x[1] + " (" + x[8] + ")" + (x[6] > 1 ? " · " + x[6] + " variant" : "");
+      }
+      var cls = "cell" + (st.sel && st.sel[0] === x[0] ? " sel" : "") + (naSobe(x[8]) ? " na" : "");
+      if (el.className !== cls) el.className = cls;
+      var left = 4 + c * CW, top = r * CH;
+      if (el._l !== left) { el._l = left; el.style.left = left + "px"; }
+      if (el._t !== top) { el._t = top; el.style.top = top + "px"; }
+      nastavIkonu(el._ico, x[4]);
+    }
   }
+  function bunkaZ(t) {
+    for (; t && t.id !== "cells"; t = t.parentNode) if (t._x) return t;
+    return null;
+  }
+  $("cells").addEventListener("click", function (e) { var el = bunkaZ(e.target); if (el) vyber(el._x); });
   var rafT = 0;
   $("mrizka").addEventListener("scroll", function () { if (!rafT) rafT = requestAnimationFrame(function () { rafT = 0; kresli(); }); });
   window.addEventListener("resize", kresli);

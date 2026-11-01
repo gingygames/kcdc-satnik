@@ -102,15 +102,35 @@ function davky(ikony: { k: string; d: string }[], limit = 40000): { k: string; d
 // ---------------------------------------------------------------------------
 // oprávnění: "" = všichni; jinak Správa (has) a most
 
+// exporty jiných resource (Správa, most): Exports.get se volá při každé zprávě stránky (ikony chodí v desítkách zpráv),
+// proto mezipaměť na 5 s; start nebo stop kteréhokoli resource ji smaže (po restartu mostu je to nový objekt)
+const exporty = new Map<string, { at: number; v: unknown }>();
+function export_(res: string, name: string): unknown {
+  const k = res + "." + name;
+  const t = Date.now();
+  const c = exporty.get(k);
+  if (c && t - c.at < 5000) return c.v;
+  let v: unknown;
+  try {
+    v = Exports.get(res, name);
+  } catch {
+    v = undefined; // resource neběží
+  }
+  exporty.set(k, { at: t, v });
+  return v;
+}
+Events.on("resourceStart", () => exporty.clear());
+Events.on("resourceStop", () => exporty.clear());
+
 async function muze(p: Player): Promise<boolean> {
   const perm = CFG.opravneni;
   if (!perm) return true;
   try {
-    const f = Exports.get("sprava", "has") as ((id: number, perm: string) => unknown) | undefined;
+    const f = export_("sprava", "has") as ((id: number, perm: string) => unknown) | undefined;
     if (typeof f === "function" && (await f(p.id, perm))) return true;
   } catch { /* Správa neběží */ }
   try {
-    const api = Exports.get("most", "api") as any;
+    const api = export_("most", "api") as any;
     if (api?.perms?.has) return !!(await api.perms.has(p.id, perm));
   } catch { /* most neběží */ }
   return false;
