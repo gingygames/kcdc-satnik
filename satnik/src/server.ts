@@ -176,6 +176,8 @@ interface Relace {
   /** kde figurína stojí a kam kouká (k hráči) */
   misto: V3 | null;
   yaw: number;
+  /** odkud kouká kamera; otáčení figuríny ji nemění, jinak by kamera obíhala s ní a otočení by nebylo vidět */
+  yawKamery: number;
   zoom: Zoom;
   pomer: number;
   panel: number;
@@ -239,7 +241,7 @@ function poslatStav(r: Relace): void {
 function zabrat(r: Relace, ms = 600): void {
   const p = Player.getById(r.pid);
   if (!p || !r.misto) return;
-  const z = zaber(r.misto, r.yaw, r.zoom, r.pomer, r.panel);
+  const z = zaber(r.misto, r.yawKamery, r.zoom, r.pomer, r.panel);
   Camera.setShot(p, { position: v3(z.position.x, z.position.y, z.position.z), lookAt: v3(z.lookAt.x, z.lookAt.y, z.lookAt.z), duration: ms, fov: z.fov });
 }
 
@@ -323,13 +325,13 @@ async function otevrit(p: Player, q?: string): Promise<string> {
     return "";
   }
   const pohlavi: "m" | "f" = p.appearance?.gender === "female" ? "f" : "m";
-  r = { pid: p.id, npc: null, pohlavi, na: [], misto: null, yaw: 0, zoom: "postava", pomer: 16 / 9, panel: CFG.panel, zrizuje: true };
+  r = { pid: p.id, npc: null, pohlavi, na: [], misto: null, yaw: 0, yawKamery: 0, zoom: "postava", pomer: 16 / 9, panel: CFG.panel, zrizuje: true };
   relace.set(p.id, r);
   p.emit(EV.otevrit, JSON.stringify({ info, q: q ?? "", figurina: stav(r) }));
   const m = await najitMisto(p);
   if (relace.get(p.id) !== r) return ""; // mezitím zavřel
   r.misto = m.misto;
-  r.yaw = m.yaw;
+  r.yaw = r.yawKamery = m.yaw; // kamera se nastaví jednou při postavení figuríny
   r.zrizuje = false;
   doSoukromi(p);
   vytvoritFigurinu(r, p);
@@ -435,7 +437,12 @@ function zpracovat(p: Player, z: Zadost): void {
         }
         return reply(p, { rid, ok: true });
       case "otocit":
-        r.yaw = (((r.yaw + (Number(z.o) || 0)) % 360) + 360) % 360;
+        // otáčí se jen tělo, kamera zůstává (yawKamery)
+        {
+          // "Infinity" by dalo NaN yaw: jen konečné číslo
+          const o = Number(z.o);
+          r.yaw = (((r.yaw + (Number.isFinite(o) ? o : 0)) % 360) + 360) % 360;
+        }
         r.npc?.teleport(v3(r.misto!.x, r.misto!.y, r.misto!.z), rot(r.yaw));
         zabrat(r, 400);
         return reply(p, { rid, ok: true });
@@ -477,7 +484,7 @@ function zmenitPohlavi(p: Player, r: Relace, pohlavi: "m" | "f"): void {
   if (r.pohlavi === pohlavi) return;
   r.pohlavi = pohlavi;
   odstranitFigurinu(r);
-  vytvoritFigurinu(r, p);
+  vytvoritFigurinu(r, p); // nová figurína dostane dosavadní natočení těla (r.yaw), kamera se nehýbe
 }
 
 Events.onClient(EV.zadost, (sender: unknown, raw: unknown) => {

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Katalog předmětů</title>
+<link rel="stylesheet" href="kit/theme.css">
+<link rel="stylesheet" href="kit/components.css">
+<link rel="stylesheet" href="style.css">
+<script src="kit/kit.js"></script>
+<script>Kit.init();</script>
+</head>
+<body class="k">
+<div class="app">
+  <header class="top">
+    <strong class="title">Katalog předmětů</strong>
+    <nav class="k-tabs" role="tablist">
+      <button class="k-tab" role="tab" aria-selected="true" data-tab="predmety">Předměty</button>
+      <button class="k-tab" role="tab" aria-selected="false" data-tab="ikony">Kolekce ikon</button>
+    </nav>
+    <span id="vyber" class="vyber" hidden></span>
+    <span id="stav" class="k-muted"></span>
+    <button id="zavrit" class="k-btn k-btn--ghost k-btn--sm" title="Zavřít (Esc)">✕</button>
+  </header>
+
+  <section id="predmety" class="pane">
+    <div class="filters">
+      <input class="k-input" id="q" type="search" placeholder="Hledat název nebo id (Ctrl+F)" autocomplete="off">
+      <select class="k-input" id="pod" title="Podkategorie"><option value="">Všechny podkategorie</option></select>
+      <select class="k-input" id="slot" title="Slot"><option value="">Každý slot</option></select>
+      <select class="k-input" id="zna" title="Zná server KCDC"><option value="">Server: vše</option><option value="1">zná server</option><option value="0">nezná server</option></select>
+      <select class="k-input" id="oblect" title="Jde obléct"><option value="">Obléct: vše</option><option value="1">jde obléct</option><option value="0">nejde obléct</option></select>
+      <select class="k-input" id="razeni" title="Řazení"><option value="nazev">podle názvu</option><option value="cena">podle ceny</option><option value="vaha">podle váhy</option><option value="id">podle id</option></select>
+      <label class="k-switch"><input id="vse" type="checkbox"><span class="k-track"></span> i systémové a questové</label>
+    </div>
+    <div id="kats" class="chips"></div>
+    <div class="body">
+      <div id="mrizka" class="grid" tabindex="0"><div id="spacer"></div><div id="cells"></div></div>
+      <aside id="detail" class="detail"><div class="k-empty"><strong>Vyber předmět</strong> v mřížce (dvojklik v režimu výběru)</div></aside>
+    </div>
+  </section>
+
+  <section id="ikony" class="pane" hidden>
+    <div class="kolekce-add">
+      <label class="k-btn k-btn--ghost">Nahrát obrázek… <input id="soubor" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+      <button id="zPredmetu" class="k-btn k-btn--ghost" disabled>Ikona vybraného předmětu</button>
+      <input class="k-input" id="kNazev" placeholder="Název ikony (např. Kovář)" maxlength="60">
+    </div>
+    <div id="orez" class="orez" hidden>
+      <canvas id="platno" width="256" height="256"></canvas>
+      <div class="orez-ovl">
+        <label class="k-slider">Přiblížení <input id="zoom" type="range" min="1" max="4" step="0.05" value="1"></label>
+        <p class="k-muted">Táhni obrázek myší. Uloží se jako 64×64 PNG.</p>
+        <canvas id="nahled" width="64" height="64"></canvas>
+        <button id="ulozit" class="k-btn">Uložit do kolekce</button>
+      </div>
+    </div>
+    <div id="kolekce" class="kolekce"></div>
+  </section>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

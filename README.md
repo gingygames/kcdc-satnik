@@ -23,12 +23,20 @@ a tailor** (exact names and ids, so the tailor knows what to make).
 | Resource | | |
 |---|---|---|
 | `satnik` | this repository | catalogue page, mannequin, commands, exports |
-| `katalog` | **required at runtime** | the item data and icons. Satnik ships no game data: it reads `Exports.get("katalog", "items")` and `Exports.get("katalog", "icon")` while running |
+| `katalog` | this repository, **required at runtime** | the item data and icons: satnik reads `Exports.get("katalog", "items")` and `Exports.get("katalog", "icon")` while running. Also an admin item browser of its own (`/katalog`, F10) |
 | `most`, `sprava` | optional | permissions (`opravneni`) and command help in the F10 admin panel, from [gingy-kcdc](https://github.com/gingygames/gingy-kcdc) |
 
-The `katalog` resource generates its data from **your own game installation** and is not part of this repository
-(no Warhorse assets or extracted icons are published here). Any resource named `katalog` that provides these two
-exports works:
+**No game data is published here.** `katalog` generates its data from **your own game installation** (item tables,
+Czech/English names and inventory icons from the game's `.pak` files) into `katalog/gen/`, which is gitignored:
+
+```
+cd katalog
+npm ci
+npm run katalog -- "D:\Games\KingdomComeDeliverance2"   # path to your KCD2 install, ~1.5 min
+node tools/build.mjs --out <server>/resources/katalog    # builds dist/katalog with gen/ and deploys it
+```
+
+Any other resource named `katalog` with these two exports works too:
 
 - `items(categories: string[]) => KatalogPredmet[]` (called with `["obleceni", "zbroj"]`), the shape is
   `KatalogPredmet` in [satnik/src/core.ts](satnik/src/core.ts): `id` (item class name), `guid` (item class GUID),

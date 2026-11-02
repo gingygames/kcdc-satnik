@@ -35,8 +35,9 @@ const manifest = {
     serverScripts: ["satnik_config.js", "server.js"],
     clientScripts: ["client.js"],
     files: ["ui/**"],
-    // katalog dává data a ikony (bez něj je šatník prázdný); most a Správa jen pro volitelné oprávnění
-    resourceDependencies: [{ name: "katalog" }, { name: "most", optional: true }],
+    // katalog dává data a ikony (bez něj je šatník prázdný): povinný. Most a Správa jen pro volitelné oprávnění
+    // a čtou se při každém dotazu; most v závislostech není (jeho restart by restartoval i šatník)
+    resourceDependencies: [{ name: "katalog" }],
     exports: ["version", "open", "close", "get", "search", "outfit"],
     errorBehavior: "continue",
   },

@@ -8,7 +8,7 @@ Resource `satnik` pro KCDC. Každý hráč si příkazem **`/satnik`** otevře k
 - **Filtry:** Pánské / Dámské, část těla (hlava, krk, trup, kabát a sukně, paže, ruce, nohy, boty, opasek) s počty, druh kusu (kápě, šaty, prošívanice…), oblečení / zbroj, řazení podle těla nebo ceny, hledání bez diakritiky v názvu i id (`kosile`, `F_Cotehardie01_m03_B`, `damske`).
 - **Detail:** ikona, popis ze hry, **název ve hře**, anglický název a **id předmětu**, každé s tlačítkem Kopírovat. Dál varianty s ikonami, cena, váha, vrstva, obrana (bod / sek / drcení) a charisma.
 - **Figurína:** klik na kus = figurína si ho hned oblékne. Kus na stejném místě těla nahradí předchozí, vrstvy (košile, prošívanice, kroužky, plát, kabát) a doplňky se skládají. Dámský kus oblékne ženskou figurínu a naopak. Figurína dostane tvář a vlasy hráče, když má stejné pohlaví.
-- **Kamera:** záběr Postava / Trup / Hlava / Nohy, otáčení figuríny (⟲ ⟳, klávesy Q / E). Figurína stojí vpravo vedle panelu.
+- **Kamera:** záběr Postava / Trup / Hlava / Nohy, otáčení figuríny (⟲ ⟳, klávesy Q / E): otáčí se jen figurína, kamera zůstává, kde byla při otevření. Figurína stojí vpravo vedle panelu.
 - **Moje oblečení:** figurína si oblékne, co má hráč právě na sobě (výchozí bod pro „chci to samé, ale v modré“).
 - **Pro krejčího:** *Kopírovat seznam* (názvy a id do schránky) a *Ukázat krejčímu* (seznam do chatu hráčům do 8 m, jednou za 10 s). Krejčí si kus otevře příkazem `/satnik <id>`.
 - **Bezpečné:** šatník nic nedává ani nebere, inventáře hráče se nedotkne. Ovládání je při otevřeném šatníku vypnuté.

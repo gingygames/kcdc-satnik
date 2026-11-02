@@ -1,5 +1,10 @@
 {
   "repo": "gingygames/kcdc-satnik",
-  "extra": ["ui-kit/"],
+  "moduly": [
+    "katalog"
+  ],
+  "extra": [
+    "ui-kit/"
+  ],
   "vynechat": []
 }

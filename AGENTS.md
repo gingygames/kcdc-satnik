@@ -29,13 +29,14 @@ this file and the root README are English.
 | `satnik/test/` | `satnik.test.ts` (core), `server.test.ts` on the fake KCDC `fake-kcdc.ts` (vitest) |
 | `satnik/tools/build.mjs` | builds `dist/satnik` (`--out <server>/resources/satnik` deploys) |
 | `satnik/tools/ui-dev.mjs` | page preview without the game; needs generated `katalog` data next to `satnik/` |
+| `katalog/` | resource `katalog`: item data and icons generated from the user's own game install (`npm run katalog -- <game dir>` → `katalog/gen/`, gitignored), admin item browser; API in [katalog/AGENTS.md](katalog/AGENTS.md) |
 
 ## Commands
 
 ```
 cd satnik
 npm ci
-npm test                  # must pass before you finish
+npm test                  # must pass before you finish (also in katalog/)
 node tools/build.mjs      # typechecks server and client (tsc) and builds dist/satnik
 ```
 
@@ -50,8 +51,8 @@ node tools/build.mjs      # typechecks server and client (tsc) and builds dist/s
    instance removes leftover mannequins and returns players from private worlds).
 4. **Logic goes into `src/core.ts` with a test.** The server only connects KCDC APIs. A new KCDC call needs the matching
    behaviour in `test/fake-kcdc.ts`, written from the docs in `@kingdomsconnected/types`.
-5. **No game data in this repository.** Item data and icons come from the `katalog` resource at runtime. Do not commit
-   anything extracted from the game (icons, tables, models).
+5. **No game data in this repository.** Item data and icons come from the `katalog` resource at runtime, generated
+   locally into `katalog/gen/` (gitignored). Do not commit anything extracted from the game (icons, tables, models).
 6. **No global keys.** KCDC modules open menus with chat commands (`/satnik`), not `Key.bind` on random keys. Q / E
    work only inside the open page.
 7. Keep every event under the KCDC limit (~64 KB): result pages of 120 rows, icons in batches up to 40 000 characters.

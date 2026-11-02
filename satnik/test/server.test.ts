@@ -200,3 +200,45 @@ describe("soukromý náhled", () => {
     expect(npc.videli.has(s.petr.id)).toBe(true);
   });
 });
+
+describe("otáčení figuríny", () => {
+  beforeEach(() => void vi.useFakeTimers());
+  afterEach(() => void vi.useRealTimers());
+
+  it("⟲ ⟳ otočí jen figurínu, kamera zůstane na místě (jinak by obíhala s ní a otočení nebylo vidět)", async () => {
+    const s = server();
+    await s.cmd(s.jan);
+    const f = s.figurina(s.jan)!;
+    const yaw0 = f.rotation.z;
+    const zaber0 = s.jan.shots.at(-1);
+    expect(zaber0?.position).toBeTruthy();
+
+    await s.zadost(s.jan, { op: "otocit", o: 45 });
+    expect(f.rotation.z).toBeCloseTo((yaw0 + 45) % 360);
+    expect(s.jan.shots.at(-1).position).toEqual(zaber0.position);
+    expect(s.jan.shots.at(-1).lookAt).toEqual(zaber0.lookAt);
+
+    await s.zadost(s.jan, { op: "otocit", o: -90 });
+    expect(f.rotation.z).toBeCloseTo((yaw0 - 45 + 360) % 360);
+    expect(s.jan.shots.at(-1).position).toEqual(zaber0.position);
+
+    // nekonečno od klienta nic neotočí (dřív NaN)
+    await s.zadost(s.jan, { op: "otocit", o: "Infinity" });
+    expect(f.rotation.z).toBeCloseTo((yaw0 - 45 + 360) % 360);
+  });
+
+  it("přepnutí pohlaví zachová natočení těla i kameru", async () => {
+    const s = server();
+    await s.cmd(s.jan);
+    const yaw0 = s.figurina(s.jan)!.rotation.z;
+    const zaber0 = s.jan.shots.at(-1);
+    await s.zadost(s.jan, { op: "otocit", o: 90 });
+    await s.zadost(s.jan, { op: "oblect", id: "F_Cotehardie01_m03_B" });
+    const zena = s.figurina(s.jan)!;
+    expect(zena.o.soul).toBe("townswoman");
+    expect(zena.rotation.z).toBeCloseTo((yaw0 + 90) % 360);
+    // další záběr (zoom) míří pořád stejným směrem jako na začátku
+    await s.zadost(s.jan, { op: "zoom", zoom: "postava" });
+    expect(s.jan.shots.at(-1).position).toEqual(zaber0.position);
+  });
+});

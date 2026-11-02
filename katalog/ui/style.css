@@ -1,0 +1,43 @@
+/* Katalog: jen rozložení stránky. Vzhled (barvy, písmo, tlačítka, pole) je z ui-kit (body.k, třídy k-*, tokeny --k-*). */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+.app { display: flex; flex-direction: column; height: 100%; }
+.top { display: flex; align-items: center; gap: var(--k-s3); padding: var(--k-s2) var(--k-s3); background: var(--k-surface); border-bottom: 1px solid var(--k-line); }
+.top .k-btn--ghost { margin-left: auto; }
+.title { color: var(--k-accent); font-family: var(--k-font-serif); font-size: 1.1rem; }
+.vyber { color: var(--k-info); }
+.pane { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.pane[hidden] { display: none; }
+.filters { display: flex; flex-wrap: wrap; gap: var(--k-s2); padding: var(--k-s2) var(--k-s3); align-items: center; }
+.filters .k-input, .akce .k-input, .kolekce-add .k-input { width: auto; }
+.filters #q { flex: 1 1 16rem; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--k-s1); padding: 0 var(--k-s3) var(--k-s2); }
+.body { flex: 1; display: flex; min-height: 0; }
+.grid { flex: 1; position: relative; overflow-y: auto; outline: none; }
+#cells { position: absolute; left: 0; right: 0; top: 0; }
+/* buňky mají pevný rozměr v px kvůli virtuálnímu scrollu (CW/CH v app.js) */
+.cell { position: absolute; width: 104px; height: 118px; padding: 6px 4px; text-align: center; cursor: pointer; border: 1px solid transparent; border-radius: var(--k-r-sm); }
+.cell:hover { background: var(--k-surface-2); }
+.cell.sel { border-color: var(--k-accent); background: var(--k-surface-2); }
+.ico { width: 64px; height: 64px; margin: 0 auto 4px; background: var(--k-surface) center/contain no-repeat; border-radius: var(--k-r-sm); }
+.ico.chybi::after { content: "?"; display: block; line-height: 64px; color: var(--k-faint); font-size: 1.5rem; }
+.cell .nm { font-size: 0.78rem; line-height: 1.2; height: 2.4em; overflow: hidden; }
+.cell.nezna .nm { color: var(--k-faint); }
+.detail { width: 22rem; border-left: 1px solid var(--k-line); padding: var(--k-s3); overflow-y: auto; background: var(--k-surface); }
+.detail .big { width: 128px; height: 128px; background: var(--k-bg) center/contain no-repeat; border: 1px solid var(--k-line-soft); border-radius: var(--k-r-sm); }
+.detail h3 { margin: var(--k-s2) 0 2px; color: var(--k-accent); font-family: var(--k-font-serif); }
+.detail dl { display: grid; grid-template-columns: auto 1fr; gap: 2px var(--k-s3); margin: var(--k-s2) 0; font-size: 0.9rem; }
+.detail dt { color: var(--k-muted); }
+.detail dd { margin: 0; word-break: break-all; }
+.akce { border-top: 1px solid var(--k-line-soft); padding-top: var(--k-s2); margin-top: var(--k-s2); display: grid; gap: var(--k-s2); }
+.akce .row { display: flex; gap: var(--k-s2); align-items: center; flex-wrap: wrap; }
+.akce input[type=number] { width: 4.5rem; }
+.akce select { max-width: 10rem; }
+.kolekce-add { display: flex; gap: var(--k-s2); padding: var(--k-s3); align-items: center; flex-wrap: wrap; }
+.orez { display: flex; gap: var(--k-s4); padding: 0 var(--k-s3) var(--k-s3); }
+#platno { background: var(--k-input); cursor: grab; border: 1px solid var(--k-line); }
+.orez-ovl { display: grid; gap: var(--k-s2); align-content: start; }
+#nahled { width: 64px; height: 64px; border: 1px solid var(--k-line); }
+.kolekce { display: flex; flex-wrap: wrap; gap: var(--k-s3); padding: 0 var(--k-s3) var(--k-s3); overflow-y: auto; }
+.kol { width: 7rem; text-align: center; font-size: 0.85rem; display: grid; gap: var(--k-s1); justify-items: center; }
+.akce .k-select { max-width: 10rem; }
