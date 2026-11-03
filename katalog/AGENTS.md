@@ -2,7 +2,7 @@
 
 ## API (`Exports.get("katalog", jméno)`)
 
-Volitelná závislost: v manifestu modulu `{ name: "katalog", optional: true }`. Exporty čti při každém volání, ne jednou při startu.
+Katalog zjišťuj za běhu: `try { Exports.get("katalog", jméno) } catch { /* neběží */ }` při každém volání (ne jednou při startu; `Exports.get` hází, dokud resource neběží). Do `resourceDependencies` manifestu ho dávej jen v modulu, který bez něj nemůže běžet (šatník): i `optional: true` závislost znamená, že restart katalogu restartuje i tvůj modul.
 
 | Export | Podpis | Poznámka |
 |---|---|---|

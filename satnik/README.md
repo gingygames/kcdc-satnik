@@ -31,7 +31,7 @@ Resource `satnik` pro KCDC. Každý hráč si příkazem **`/satnik`** otevře k
 
 ## Nastavení (`satnik_config.js`)
 
-`prikaz`, `opravneni` (`""` = všichni), `figurinaMuz` / `figurinaZena` (role z `Npc.roles()`, výchozí `townsman` / `townswoman`), `mojeTvar`, `panel` (podíl šířky obrazovky pro panel), `dosahUkazat`, `zavritPriZasahu`, `pauzaPoZasahu` (s, výchozí 20), `svet` (základ soukromých světů, výchozí 900000). Vzor je [config/satnik_config.example.js](config/satnik_config.example.js).
+`prikaz`, `opravneni` (`""` = všichni), `figurinaMuz` / `figurinaZena` (role z `Npc.roles()`, výchozí `townsman` / `townswoman`), `mojeTvar`, `panel` (podíl šířky obrazovky pro panel), `dosahUkazat`, `zavritPriZasahu`, `pauzaPoZasahu` (s, výchozí 20; rána = od útočníka nebo bojová, pád a skriptované poškození ne), `svet` (základ soukromých světů, výchozí 900000). Vzor je [config/satnik_config.example.js](config/satnik_config.example.js).
 
 ## Vývoj
 
@@ -39,7 +39,7 @@ Resource `satnik` pro KCDC. Každý hráč si příkazem **`/satnik`** otevře k
 cd satnik
 npm install
 npm test                     # jádro (data, hledání, figurína, záběr) + server na falešném KCDC (soukromý náhled)
-npm run build                # dist/satnik; nasazení: node playground/nasadit.mjs --jen satnik
+npm run build                # dist/satnik; nasazení: node playground/nasadit.mjs --jen satnik (katalog: --jen katalog)
 node tools/ui-dev.mjs        # http://127.0.0.1:5179/?pohlavi=f&klik=1 – stránka bez hry nad ../katalog/gen
 ```
 

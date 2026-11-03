@@ -10,6 +10,7 @@ let shown = false;
 let held = false;
 const fronta: [string, unknown][] = [];
 const log = (t: string) => console.log("[satnik] " + t);
+const odhlasit: (() => void)[] = [];
 
 function geometry() {
   const s = Web.getScreenSize();
@@ -75,15 +76,28 @@ function withView(then: () => void, tries = 10) {
   if (tries > 0) setTimeout(() => withView(then, tries - 1), 500);
 }
 
-Events.on(EV.otevrit, (raw: unknown) =>
-  withView(() => {
-    show();
-    toPage(EV.otevrit, raw);
+odhlasit.push(
+  Events.on(EV.otevrit, (raw: unknown) =>
+    withView(() => {
+      show();
+      toPage(EV.otevrit, raw);
+    }),
+  ),
+  Events.on(EV.zavrit, (raw: unknown) => {
+    toPage(EV.zavrit, raw);
+    hide();
   }),
+  Events.on(EV.vysledek, (raw: unknown) => toPage(EV.vysledek, raw)),
+  Events.on(EV.figurina, (raw: unknown) => toPage(EV.figurina, raw)),
 );
-Events.on(EV.zavrit, (raw: unknown) => {
-  toPage(EV.zavrit, raw);
+
+// klientské resources sdílejí jeden isolate: při zastavení vrátit ovládání, schovat a zrušit view a odhlásit posluchače
+Events.on("resourceStop", (name: string) => {
+  if (name !== "satnik") return;
   hide();
+  for (const f of odhlasit.splice(0)) try { f(); } catch { /* nic */ }
+  if (view >= 0) try { Web.destroyView(view); } catch (e) { log("destroyView: " + String(e)); }
+  view = -1;
+  ready = false;
+  fronta.length = 0;
 });
-Events.on(EV.vysledek, (raw: unknown) => toPage(EV.vysledek, raw));
-Events.on(EV.figurina, (raw: unknown) => toPage(EV.figurina, raw));

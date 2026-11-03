@@ -14,12 +14,14 @@ interface Config {
   /** složka resource na serveru (relativně k pracovní složce serveru) */
   slozka?: string;
   prikaz?: string;
-  /** oprávnění pro prohlížeč a akce (smlouva mostu); výchozí admin.items */
+  /** oprávnění pro prohlížeč a akce (smlouva mostu); výchozí admin.items, "" = všichni hráči */
   opravneni?: string;
+  /** kdo smí do katalogu i bez mostu a Správy: přezdívky, steamId nebo id hráčů (zkouší se jako první) */
+  admini?: (string | number)[];
   /** názvy startovních sad příchodu, když je příchod sám nenabízí */
   sady?: string[];
 }
-const CFG: Config = { slozka: "resources/katalog", prikaz: "katalog", opravneni: "admin.items", ...((globalThis as any).KATALOG_CONFIG ?? {}) };
+const CFG: Config = { slozka: "resources/katalog", prikaz: "katalog", opravneni: "admin.items", admini: [], ...((globalThis as any).KATALOG_CONFIG ?? {}) };
 const log = (t: string) => console.log("[katalog] " + t);
 
 let fs: any = null;
@@ -38,7 +40,8 @@ function nacist(): { polozky: Predmet[]; generovano: string } {
     const d = JSON.parse(fs.readFileSync(cesta("gen", "katalog.json"), "utf8"));
     return { polozky: d.polozky, generovano: d.generovano ?? "" };
   } catch (e) {
-    log(`gen/katalog.json chybí (${String((e as Error)?.message ?? e)}). Vygeneruj ho: cd katalog && npm run katalog && npm run build. Zatím jen předměty ze serveru.`);
+    log(`VAROVÁNÍ: ${cesta("gen", "katalog.json")} nejde načíst (${String((e as Error)?.message ?? e)}): katalog běží nouzově jen z Inventory.classes(), bez ikon. ` +
+      `Buď chybí gen/ (cd katalog && npm run katalog && npm run build), nebo \`slozka\` v katalog_config.js ("${CFG.slozka}") není složka, kam je resource nasazený (relativně k pracovní složce serveru, obvykle resources/katalog).`);
     const polozky: Predmet[] = Inventory.classes().map((c) => ({
       id: c.name, guid: c.id, cs: "", en: c.name, kat: "obleceni", pod: c.category, slot: "", vrstva: "", cena: 0, vaha: 0, ikona: "", kval: c.maximumQuality, quest: c.quest, typ: c.category,
     }));
@@ -118,6 +121,7 @@ function kolekcePridat(nazev: string, png?: string, hra?: string): KolekceIkona 
 function kolekceSmazat(id: string): boolean {
   const i = kolekce.findIndex((k) => k.id === id);
   if (i < 0) return false;
+  if (!fs) throw new Error("server nemá fs");
   const [z] = kolekce.splice(i, 1);
   if (z.zdroj === "soubor") try { fs.unlinkSync(cesta("data", "kolekce", z.id + ".png")); } catch { /* nic */ }
   cache.delete(z.ikona);
@@ -126,7 +130,7 @@ function kolekceSmazat(id: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// oprávnění: Správa (has/isAdmin) -> most -> nikdo
+// oprávnění: "" = všichni; jinak admini z configu -> Správa (has/isAdmin) -> most -> nikdo
 
 // exporty jiných resource (Správa, most): Exports.get se volá při každé zprávě stránky (ikony chodí v desítkách zpráv),
 // proto mezipaměť na 5 s; start nebo stop kteréhokoli resource ji smaže (po restartu mostu je to nový objekt)
@@ -148,8 +152,18 @@ function export_(res: string, name: string): unknown {
 Events.on("resourceStart", () => exporty.clear());
 Events.on("resourceStop", () => exporty.clear());
 
+/** admin podle configu (bez mostu a Správy): přezdívka, steamId nebo id hráče */
+function jeAdminZConfigu(p: Player): boolean {
+  const kdo = new Set((CFG.admini ?? []).map((a) => String(a).toLowerCase()));
+  if (!kdo.size) return false;
+  const moje = [p.nickname, String(p.id), String((p as any).steamId ?? "")];
+  return moje.some((m) => m && kdo.has(m.toLowerCase()));
+}
+
 async function muze(p: Player): Promise<boolean> {
   const perm = CFG.opravneni ?? "admin.items";
+  if (!perm) return true;
+  if (jeAdminZConfigu(p)) return true;
   for (const [res, fn, args] of [["sprava", "has", [p.id, perm]], ["sprava", "isAdmin", [p.id]]] as const) {
     try {
       const f = export_(res, fn) as ((...a: unknown[]) => unknown) | undefined;
@@ -171,7 +185,7 @@ async function muze(p: Player): Promise<boolean> {
 
 function sady(): string[] {
   try {
-    const f = Exports.get("prichod", "katalogSady") as (() => string[]) | undefined;
+    const f = export_("prichod", "katalogSady") as (() => string[]) | undefined;
     if (typeof f === "function") return f();
   } catch { /* příchod neběží */ }
   return CFG.sady ?? [];
@@ -204,7 +218,7 @@ function provest(p: Player, z: Zadost): string {
     return `Položeno u tebe: ${pocet}× ${Katalog.nazev(pr)}`;
   }
   if (z.akce === "sada") {
-    const f = (() => { try { return Exports.get("prichod", "katalogPridat") as ((sada: string, item: string, pocet: number) => unknown) | undefined; } catch { return undefined; } })();
+    const f = export_("prichod", "katalogPridat") as ((sada: string, item: string, pocet: number) => unknown) | undefined;
     if (typeof f !== "function") throw new Error("příchod neběží nebo ještě neumí přidat předmět do sady (export katalogPridat)");
     const r = f(String(z.sada ?? ""), pr.id, pocet) as { ok?: boolean; error?: string } | boolean | string;
     if (r === false || (typeof r === "object" && r && r.ok === false)) throw new Error("příchod odmítl: " + ((r as any)?.error ?? ""));
@@ -315,7 +329,14 @@ function panel() {
     perm: CFG.opravneni,
     description: `${kat.polozky.length} předmětů hry s ikonami. Prohlížeč: mřížka, filtry, dát hráči, spawn, startovní sady příchodu.`,
     actions: [
-      { id: "otevrit", label: "Otevřít prohlížeč", autorun: false, handler: (c: { caller: Player }) => otevrit(c.caller) },
+      // Správa posílá volajícího jen jako { id, nickname } (přes hranici resource jde kopie bez prototypu): celý hráč přes Player.getById
+      {
+        id: "otevrit", label: "Otevřít prohlížeč", autorun: false,
+        handler: (c: { caller: { id: number; nickname: string } }) => {
+          const p = Player.getById(Number(c.caller?.id));
+          return p ? otevrit(p) : `Hráč ${c.caller?.nickname ?? c.caller?.id ?? "?"} už není online.`;
+        },
+      },
       {
         id: "hledat", label: "Hledat", submit: "Hledat",
         params: [{ name: "q", label: "Hledat (název, id)", type: "string", required: true }],
@@ -328,11 +349,26 @@ function panel() {
   };
 }
 
-function zaregistrovatPanel() {
+/** exporty Správy jdou číst až chvíli po jejím resourceStart (resource je ještě Loading a Exports.get hází), proto pár pokusů;
+ *  když Správa neběží, panel si vezme sama přes spravaPanels */
+let panelPokus: ReturnType<typeof setTimeout> | null = null;
+function zaregistrovatPanel(pokusy = 5) {
+  if (panelPokus !== null) (clearTimeout(panelPokus), (panelPokus = null)); // nový pokus ruší rozběhnutý (jinak by se panel zaregistroval dvakrát)
+  let f: ((def: unknown, owner: string) => void) | undefined;
   try {
-    const f = Exports.get("sprava", "registerPanel") as ((def: unknown, owner: string) => void) | undefined;
-    if (typeof f === "function") f(panel(), "katalog");
-  } catch { /* Správa neběží, panel si vezme přes spravaPanels */ }
+    f = Exports.get("sprava", "registerPanel") as typeof f;
+  } catch {
+    f = undefined;
+  }
+  if (typeof f !== "function") {
+    if (pokusy > 0) panelPokus = setTimeout(() => zaregistrovatPanel(pokusy - 1), 300);
+    return;
+  }
+  try {
+    f(panel(), "katalog");
+  } catch (e) {
+    log("registerPanel: " + String(e));
+  }
 }
 Events.on("resourceStart", (name: string) => {
   if (name === "sprava") zaregistrovatPanel();

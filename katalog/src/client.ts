@@ -8,6 +8,7 @@ let ready = false;
 let shown = false;
 const fronta: [string, unknown][] = [];
 const log = (t: string) => console.log("[katalog] " + t);
+const odhlasit: (() => void)[] = [];
 
 function geometry() {
   const s = Web.getScreenSize();
@@ -65,10 +66,23 @@ function withView(then: () => void, tries = 10) {
   if (tries > 0) setTimeout(() => withView(then, tries - 1), 500);
 }
 
-Events.on(EV.otevrit, (raw: unknown) =>
-  withView(() => {
-    show();
-    toPage(EV.otevrit, raw);
-  }),
+odhlasit.push(
+  Events.on(EV.otevrit, (raw: unknown) =>
+    withView(() => {
+      show();
+      toPage(EV.otevrit, raw);
+    }),
+  ),
+  Events.on(EV.vysledek, (raw: unknown) => toPage(EV.vysledek, raw)),
 );
-Events.on(EV.vysledek, (raw: unknown) => toPage(EV.vysledek, raw));
+
+// klientské resources sdílejí jeden isolate: při zastavení schovat a zrušit view a odhlásit posluchače
+Events.on("resourceStop", (name: string) => {
+  if (name !== "katalog") return;
+  hide();
+  for (const f of odhlasit.splice(0)) try { f(); } catch { /* nic */ }
+  if (view >= 0) try { Web.destroyView(view); } catch (e) { log("destroyView: " + String(e)); }
+  view = -1;
+  ready = false;
+  fronta.length = 0;
+});

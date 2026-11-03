@@ -11,8 +11,10 @@ cd katalog
 npm install
 npm run katalog                 # cesta ke hře z playground/playground.json (gameDir), nebo:
 npm run katalog -- "D:\...\KingdomComeDeliverance2"
-npm run build                   # dist/katalog (+ gen/), nasazení: playground\nasadit.ps1 -Jen katalog
+npm run build                   # dist/katalog (+ gen/), nasazení: node playground/nasadit.mjs --jen katalog
 ```
+
+`npm run katalog` potřebuje Node ≥ 22.18 (skript importuje `src/sloty.ts` přímo, bez překladu). Na serveru musí být `katalog` v seznamu resources a `slozka` v `katalog_config.js` musí být složka, kam je nasazený (výchozí `resources/katalog`, relativně k pracovní složce serveru), jinak server `gen/` nenajde a běží nouzově bez ikon (varování v logu).
 
 | Zdroj ve hře | Co se z něj bere |
 |---|---|
@@ -37,7 +39,7 @@ Datová sada `warpuppies/wardogs-data` (Unlicense), kterou používá web Wardog
 - F10 → Správa → **Katalog**: *Otevřít prohlížeč*, *Hledat* (tabulka).
 - Esc zavře, Ctrl+F hledání, dvojklik v režimu výběru vybere.
 - Záložka **Kolekce ikon**: nahrát obrázek (ořez tažením a přiblížením, uloží se 64×64 PNG), nebo vzít ikonu vybraného předmětu. Ukládá se do `data/kolekce.json` a `data/kolekce/*.png` (deploy je nemaže).
-- Oprávnění: `admin.items` (Správa `has`/`isAdmin`, jinak `most`), viz `katalog_config.js`.
+- Oprávnění: `admin.items` (Správa `has`/`isAdmin`, jinak `most`), viz `katalog_config.js`. Bez mostu a Správy pustí katalog jen hráče v `admini` (přezdívky, steamId nebo id), nebo všechny s `opravneni: ""`.
 
 ## Vývoj
 

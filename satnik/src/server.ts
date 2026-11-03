@@ -512,7 +512,10 @@ Events.on("playerDisconnect", (p: Player) => {
   posledni.delete(p.id);
   rana.delete(p.id);
 });
-Events.on("playerDamage", (p: Player) => {
+// rána v boji: od útočníka, nebo s bojovým důvodem; pád, hlad, otrava a skriptované poškození šatník nezavírají a nepočítají pauzu
+const BOJ = new Set(["combat", "gunshot"]);
+Events.on("playerDamage", (p: Player, utocnik: Player | Npc | null, _kolik: number, _cast: unknown, duvod: string) => {
+  if (!utocnik && !BOJ.has(duvod)) return;
   rana.set(p.id, Date.now());
   if (CFG.zavritPriZasahu && relace.has(p.id)) zavrit(p.id, "zavřeno, dostal jsi ránu.");
 });
@@ -522,13 +525,26 @@ Events.on("resourceStop", (name: string) => {
   for (const pid of [...relace.keys()]) zavrit(pid);
 });
 
-// nápověda v konzoli Správy (`;`): přesný popis místo odhadu ze zdroje
-function popsatPrikaz(): void {
+// nápověda v konzoli Správy (`;`): přesný popis místo odhadu ze zdroje. Exporty Správy jdou číst až chvíli po jejím
+// resourceStart (resource je ještě Loading a Exports.get hází), proto pár pokusů; když Správa neběží, nic
+let popisPokus: ReturnType<typeof setTimeout> | null = null;
+function popsatPrikaz(pokusy = 5): void {
+  if (popisPokus !== null) (clearTimeout(popisPokus), (popisPokus = null)); // nový pokus ruší rozběhnutý
+  let f: ((owner: string, defs: unknown[]) => void) | undefined;
   try {
-    const f = Exports.get("sprava", "registerChatCommands") as ((owner: string, defs: unknown[]) => void) | undefined;
-    if (typeof f === "function")
-      f("satnik", [{ name: CFG.prikaz, help: "šatník: všechno oblečení ze hry s ikonami a přesnými názvy, vyzkoušení na figuríně", usage: `/${CFG.prikaz} [hledat | id | zavrit]`, perm: CFG.opravneni || undefined }]);
-  } catch { /* Správa neběží */ }
+    f = Exports.get("sprava", "registerChatCommands") as typeof f;
+  } catch {
+    f = undefined;
+  }
+  if (typeof f !== "function") {
+    if (pokusy > 0) popisPokus = setTimeout(() => popsatPrikaz(pokusy - 1), 300);
+    return;
+  }
+  try {
+    f("satnik", [{ name: CFG.prikaz, help: "šatník: všechno oblečení ze hry s ikonami a přesnými názvy, vyzkoušení na figuríně", usage: `/${CFG.prikaz} [hledat | id | zavrit]`, perm: CFG.opravneni || undefined }]);
+  } catch (e) {
+    log("registerChatCommands: " + String(e));
+  }
 }
 Events.on("resourceStart", (name: string) => {
   if (name === "sprava") popsatPrikaz();

@@ -13,9 +13,9 @@ globalThis.SATNIK_CONFIG = {
   panel: 0.56,
   // "Ukázat krejčímu": komu v okolí přijde seznam do chatu (metry)
   dosahUkazat: 8,
-  // zavřít šatník, když hráč dostane ránu
+  // zavřít šatník, když hráč dostane ránu v boji (od útočníka, nebo důvod combat / gunshot; pád a skriptované poškození ne)
   zavritPriZasahu: true,
-  // po ráně jde šatník otevřít až za tolik sekund (hráč je při náhledu v soukromém světě, nesmí to být útěk z boje)
+  // po takové ráně jde šatník otevřít až za tolik sekund (hráč je při náhledu v soukromém světě, nesmí to být útěk z boje)
   pauzaPoZasahu: 20,
   // soukromé virtuální světy náhledu: svet + id hráče (příchod používá 7000 + id)
   svet: 900000,

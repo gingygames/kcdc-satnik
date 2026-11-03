@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "version": "0.1.0",
+  "engines": { "node": ">=22.18" },
   "description": "Šatník pro Kingdoms Connected: všechno oblečení ze hry s ikonami a přesnými názvy, vyzkoušení na figuríně (pánské i dámské), /satnik pro všechny",
   "scripts": {
     "build": "node tools/build.mjs",
@@ -10,7 +11,7 @@
     "ui": "node tools/ui-dev.mjs"
   },
   "devDependencies": {
-    "@kingdomsconnected/types": "1.7.1",
+    "@kingdomsconnected/types": "1.7.2",
     "esbuild": "^0.28.2",
     "typescript": "6.0.2",
     "vitest": "^5.0.5"

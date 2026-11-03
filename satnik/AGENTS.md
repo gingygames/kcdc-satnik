@@ -2,7 +2,7 @@
 
 ## Závislosti
 
-- **`katalog`** (povinná v manifestu): export `items(kats)` (celé předměty s `pohlavi`, `model`, `popis`, `obrana`, `charisma`) a `icon(klic)`. Šatník čte exporty při každém volání a data znovu načte při `resourceStart` katalogu. Když katalog na serveru nemá export `items` (starší verze), šatník je prázdný. KCDC drží exporty od startu serveru, takže po přidání exportu je potřeba `node playground/konzole.mjs refreshall` nebo restart.
+- **`katalog`** (povinná v manifestu): export `items(kats)` (celé předměty s `pohlavi`, `model`, `popis`, `obrana`, `charisma`) a `icon(klic)`. Šatník čte exporty při každém volání. Katalog je povinná závislost, takže jeho restart kaskádou restartuje i šatník a data si načte nová instance při startu; větev `resourceStart` katalogu v serveru zůstává jen jako neškodná pojistka. Když katalog na serveru nemá export `items` (starší verze), šatník je prázdný. KCDC drží exporty od startu serveru, takže po přidání exportu je potřeba `node playground/konzole.mjs refreshall` nebo restart.
 - `most`, `sprava` (volitelné): jen pro `opravneni`, když není prázdné. Správa dostane popis příkazu přes `registerChatCommands`.
 
 ## API (`Exports.get("satnik", jméno)`)
@@ -26,7 +26,7 @@ Typy v `src/shared.ts`. Klient po otevření pošle `obrazovka` (poměr stran, p
 
 ## Figurína
 
-- **Soukromí:** figurína vzniká rovnou v soukromém virtuálním světě `CFG.svet + playerId` (`Npc.create({ virtualWorld })`) a hráč se do něj přesune (`setVirtualWorld`); původní svět si pamatuje stav hráče `satnik.svet` (scope `server`). Samotné `setVisibleTo` po `Npc.create` nestačí: NPC se rozešle klientům poblíž hned při vytvoření. Zavření vrátí hráče do původního světa, jen když je pořád v soukromém (jinak ho mezitím přesunul jiný modul). Po ráně nejde šatník otevřít `pauzaPoZasahu` s.
+- **Soukromí:** figurína vzniká rovnou v soukromém virtuálním světě `CFG.svet + playerId` (`Npc.create({ virtualWorld })`) a hráč se do něj přesune (`setVirtualWorld`); původní svět si pamatuje stav hráče `satnik.svet` (scope `server`). Samotné `setVisibleTo` po `Npc.create` nestačí: NPC se rozešle klientům poblíž hned při vytvoření. Zavření vrátí hráče do původního světa, jen když je pořád v soukromém (jinak ho mezitím přesunul jiný modul). Po ráně v boji (od útočníka, nebo `playerDamage` s důvodem `combat` / `gunshot`; pád, hlad a skriptované poškození se nepočítají) nejde šatník otevřít `pauzaPoZasahu` s.
 - `Npc.create` (role `townsman` / `townswoman`, `frozen`, `invulnerable`, `interactable: false`, bez jmenovky) → `setVisibleTo(hráč)` (druhá pojistka) → `pin(hráč)` → `state.satnik = playerId` (scope `server`). Nová instance po restartu odstraní figuríny se `state.satnik` nebo v soukromém světě a vrátí hráče se `satnik.svet` nebo v soukromém světě.
 - *Ukázat krejčímu* jde hráčům v okolí v **původním** světě hráče, ne v soukromém.
 - Místo: `World.raycast` z hráče do 8 směrů (`ODSTUP` = 3,5 m), `World.resolveGround` pro výšku. Kamera stojí na spojnici 0,7 m před hráčem, takže hráč je za ní.

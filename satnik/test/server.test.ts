@@ -193,6 +193,23 @@ describe("soukromý náhled", () => {
     expect(s.figurina(s.jan)).toBeTruthy();
   });
 
+  it("pád nebo skriptované poškození bez útočníka šatník nezavře ani nepočítá pauzu", async () => {
+    const s = server();
+    await s.cmd(s.jan);
+    s.fire("playerDamage", s.jan, null, 10, "leftLeg", "fall");
+    s.fire("playerDamage", s.jan, null, 5, null, "scripted");
+    expect(s.figurina(s.jan)).toBeTruthy();
+    expect(s.jan.virtualWorld).not.toBe(0);
+    await s.cmd(s.jan, "zavrit");
+    await s.cmd(s.jan);
+    expect(s.figurina(s.jan)).toBeTruthy();
+    // rána od NPC bez důvodu v boji zavře
+    const npc = s.Npc.create({ soul: "bandit", virtualWorld: 0 });
+    s.fire("playerDamage", s.jan, npc, 10, "torso", "unknown");
+    expect(s.figurina(s.jan)).toBeFalsy();
+    expect(s.jan.virtualWorld).toBe(0);
+  });
+
   it("starý postup (jen setVisibleTo po create) by figurínu ostatním ukázal: model replikace to zachytí", () => {
     const s = server();
     const npc = s.Npc.create({ soul: "townsman", virtualWorld: 0 });

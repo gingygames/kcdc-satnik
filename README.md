@@ -14,9 +14,18 @@ a tailor** (exact names and ids, so the tailor knows what to make).
 - For the tailor: *Copy list* (names and ids to the clipboard) and *Show to tailor* (the list in chat to players nearby).
 - **Private preview:** the mannequin is spawned in a private virtual world of the player, and the player is moved
   there for the duration of the preview, so nobody else sees the mannequin, its clothes or the player browsing. The
-  player returns to their own world on close, disconnect, death or a hit. It cannot be used to escape a fight (no
-  opening for 20 s after a hit).
+  player returns to their own world on close, disconnect, death or a hit in combat. It cannot be used to escape a
+  fight (no opening for 20 s after a combat hit; falls and scripted damage do not count).
 - Safe: never gives or takes items, never touches the player's inventory.
+
+## Preview
+
+Rendered outside the game from the modules' own pages (`node tools/ui-dev.mjs`), with icons from a local game
+installation. In game the page is a web view beside the 3D mannequin.
+
+| Wardrobe (`/satnik`) | Item catalogue (`/katalog`, admin) |
+|---|---|
+| ![Wardrobe](preview/wardrobe.png) | ![Catalogue](preview/catalogue.png) |
 
 ## Requirements
 
@@ -25,6 +34,11 @@ a tailor** (exact names and ids, so the tailor knows what to make).
 | `satnik` | this repository | catalogue page, mannequin, commands, exports |
 | `katalog` | this repository, **required at runtime** | the item data and icons: satnik reads `Exports.get("katalog", "items")` and `Exports.get("katalog", "icon")` while running. Also an admin item browser of its own (`/katalog`, F10) |
 | `most`, `sprava` | optional | permissions (`opravneni`) and command help in the F10 admin panel, from [gingy-kcdc](https://github.com/gingygames/gingy-kcdc) |
+
+Both `satnik` and `katalog` must be listed in the server's resource configuration (`satnik` declares `katalog` as a
+hard dependency, so it starts after it). "Optional" means permissions only: without `most` / `sprava`, `opravneni: ""`
+opens the resource to every player (the default for `satnik`), or list the allowed players in `admini` (nicknames,
+Steam ids or player ids) in `katalog_config.js`; `katalog` defaults to `admin.items`, which no one holds without them.
 
 **No game data is published here.** `katalog` generates its data from **your own game installation** (item tables,
 Czech/English names and inventory icons from the game's `.pak` files) into `katalog/gen/`, which is gitignored:
@@ -35,6 +49,12 @@ npm ci
 npm run katalog -- "D:\Games\KingdomComeDeliverance2"   # path to your KCD2 install, ~1.5 min
 node tools/build.mjs --out <server>/resources/katalog    # builds dist/katalog with gen/ and deploys it
 ```
+
+`npm run katalog` needs **Node 22.18 or newer** (it imports `src/sloty.ts` directly and relies on Node's type
+stripping; `engines` in both `package.json` say so). `slozka` in `resources/katalog/katalog_config.js` must be the
+folder the resource is deployed to, relative to the server's working directory (default `resources/katalog`);
+otherwise the server does not find `gen/`, logs a warning naming the expected path and falls back to the few item
+classes it knows from `Inventory.classes()`, without icons.
 
 Any other resource named `katalog` with these two exports works too:
 

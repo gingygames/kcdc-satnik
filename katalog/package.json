@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "version": "0.1.0",
+  "engines": { "node": ">=22.18" },
   "description": "Katalog předmětů KCD2 s ikonami pro Kingdoms Connected: prohlížeč (F10, /katalog), výběr předmětu pro moduly",
   "scripts": {
     "katalog": "node tools/katalog.mjs",
@@ -11,7 +12,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@kingdomsconnected/types": "1.7.1",
+    "@kingdomsconnected/types": "1.7.2",
     "dds-ktx-parser": "2.0.0",
     "esbuild": "^0.28.2",
     "typescript": "6.0.2",
